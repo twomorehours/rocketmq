@@ -1,11 +1,10 @@
 package org.apache.rocketmq.store.schedule;
 
-import org.apache.rocketmq.common.message.MessageConst;
-import org.apache.rocketmq.common.message.MessageDecoder;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.message.MessageExtBatch;
+import org.apache.rocketmq.common.TopicFilterType;
+import org.apache.rocketmq.common.message.*;
 import org.apache.rocketmq.common.sysflag.MessageSysFlag;
 import org.apache.rocketmq.store.*;
+import org.apache.rocketmq.store.util.TimeWheel;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +42,8 @@ public class ScheduleMessageService2 {
 
     private final AtomicBoolean started = new AtomicBoolean(false);
 
+    private TimeWheel timeWheel;
+
     /**
      * 重放线程
      */
@@ -73,25 +74,33 @@ public class ScheduleMessageService2 {
         long now = System.currentTimeMillis();
         MessageExt messageExt = defaultMessageStore.lookMessageByOffset(
                 request.getCommitLogOffset(), request.getMsgSize());
+        if (messageExt == null) {
+            return;
+        }
         String property = messageExt.getProperty(MessageConst.PROPERTY_DELAY_TIME_IN_SECONDS);
-        long executeTime = Long.parseLong(property) + now;
+        long executeTime = Long.parseLong(property) * 1000 + now;
+        messageExt.putUserProperty(MessageConst.PROPERTY_EXECUTE_TIME_IN_SECONDS, String.valueOf(executeTime / 1000));
         long executeTimeInNumber = timeInNumber(executeTime);
         MappedFile mappedFile = logMap.get(executeTime);
         if (mappedFile == null) {
             String storePathRootDir = defaultMessageStore.getMessageStoreConfig().getStorePathRootDir();
             String logPath = storePathRootDir + File.separator + "schedulelog" + File.separator + executeTimeInNumber;
             try {
-                mappedFile = new MappedFile(logPath, Integer.MAX_VALUE);
+                mappedFile = new MappedFile(logPath, 10 * 1024 * 1024);
+                logMap.put(executeTimeInNumber, mappedFile);
             } catch (IOException e) {
                 e.printStackTrace();
                 return;
             }
         }
-        int beforePosition = mappedFile.getWrotePosition();
-        mappedFile.appendMessagesInner(messageExt, this.appendMessageCallback);
-        if (now + MINUTES_IN_MEMORY >= executeTime) {
+        AppendMessageResult result = mappedFile.appendMessage(toInner(messageExt), this.appendMessageCallback);
+        if (!result.isOk()) {
+            return;
+        }
+        if (now + MINUTES_IN_MEMORY * 60 >= executeTime / 1000) {
             // 直接进入时间轮
-
+            timeWheel.addTask(executeTime / 1000,
+                    new TimeWheelTask(executeTimeInNumber, (int) result.getWroteOffset(), result.getWroteBytes(), defaultMessageStore, logMap));
         }
     }
 
@@ -105,6 +114,7 @@ public class ScheduleMessageService2 {
         if (this.started.compareAndSet(true, false)) {
             //TODO shutdown checkpoint
             reputMessageThreadPool.shutdown();
+            timeWheel.stop();
         }
     }
 
@@ -114,6 +124,8 @@ public class ScheduleMessageService2 {
         }
         reputMessageThreadPool = Executors.newSingleThreadExecutor();
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        this.timeWheel = new TimeWheel((MINUTES_IN_MEMORY + LOAD_IN_ADVANCE) * 60, reputMessageThreadPool);
+        this.timeWheel.start();
         //TODO start
         // 启动定时checkpoint 启动时间轮
     }
@@ -125,8 +137,30 @@ public class ScheduleMessageService2 {
     }
 
 
-    public static void main(String[] args) {
-        System.out.println(timeInNumber(System.currentTimeMillis()));
+    public static MessageExtBrokerInner toInner(MessageExt msgExt) {
+        MessageExtBrokerInner msgInner = new MessageExtBrokerInner();
+        msgInner.setBody(msgExt.getBody());
+        msgInner.setFlag(msgExt.getFlag());
+        MessageAccessor.setProperties(msgInner, msgExt.getProperties());
+
+        TopicFilterType topicFilterType = MessageExt.parseTopicFilterType(msgInner.getSysFlag());
+        long tagsCodeValue =
+                MessageExtBrokerInner.tagsString2tagsCode(topicFilterType, msgInner.getTags());
+        msgInner.setTagsCode(tagsCodeValue);
+        msgInner.setPropertiesString(MessageDecoder.messageProperties2String(msgExt.getProperties()));
+
+        msgInner.setSysFlag(msgExt.getSysFlag());
+        msgInner.setBornTimestamp(msgExt.getBornTimestamp());
+        msgInner.setBornHost(msgExt.getBornHost());
+        msgInner.setStoreHost(msgExt.getStoreHost());
+        msgInner.setReconsumeTimes(msgExt.getReconsumeTimes());
+
+        msgInner.setWaitStoreMsgOK(false);
+        MessageAccessor.clearProperty(msgInner, MessageConst.PROPERTY_DELAY_TIME_LEVEL);
+        msgInner.setTopic(msgExt.getTopic());
+        msgInner.setQueueId(msgExt.getQueueId());
+
+        return msgInner;
     }
 
 }

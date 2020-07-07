@@ -32,8 +32,10 @@ import java.nio.channels.OverlappingFileLockException;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.rocketmq.common.BrokerConfig;
 import org.apache.rocketmq.common.UtilAll;
+import org.apache.rocketmq.common.message.MessageConst;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.store.config.FlushDiskType;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
@@ -373,7 +375,7 @@ public class DefaultMessageStoreTest {
             String messageBody = buildMessageBodyByOffset(StoreMessage, i);
 
             MessageExtBrokerInner msgInner =
-                i < totalCount / 2 ? buildMessage(messageBody.getBytes(), topic) : buildIPv6HostMessage(messageBody.getBytes(), topic);
+                    i < totalCount / 2 ? buildMessage(messageBody.getBytes(), topic) : buildIPv6HostMessage(messageBody.getBytes(), topic);
             msgInner.setQueueId(queueId);
             PutMessageResult result = messageStore.putMessage(msgInner);
             appendMessageResultArray[i] = result.getAppendMessageResult();
@@ -423,6 +425,7 @@ public class DefaultMessageStoreTest {
         msg.setBornTimestamp(System.currentTimeMillis());
         msg.setStoreHost(StoreHost);
         msg.setBornHost(BornHost);
+        msg.setDelayTime(10);
         return msg;
     }
 
@@ -628,7 +631,7 @@ public class DefaultMessageStoreTest {
     private class MyMessageArrivingListener implements MessageArrivingListener {
         @Override
         public void arriving(String topic, int queueId, long logicOffset, long tagsCode, long msgStoreTime,
-            byte[] filterBitMap, Map<String, String> properties) {
+                             byte[] filterBitMap, Map<String, String> properties) {
         }
     }
 }

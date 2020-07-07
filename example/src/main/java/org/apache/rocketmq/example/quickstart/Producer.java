@@ -32,7 +32,7 @@ public class Producer {
          * Instantiate with a producer group name.
          */
         DefaultMQProducer producer = new DefaultMQProducer("please_rename_unique_group_name");
-
+        producer.setNamesrvAddr("localhost:9876");
         /*
          * Specify name server addresses.
          * <p/>
@@ -50,7 +50,7 @@ public class Producer {
          */
         producer.start();
 
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 1; i++) {
             try {
 
                 /*
@@ -60,7 +60,7 @@ public class Producer {
                     "TagA" /* Tag */,
                     ("Hello RocketMQ " + i).getBytes(RemotingHelper.DEFAULT_CHARSET) /* Message body */
                 );
-
+                msg.setDelayTime(10);
                 /*
                  * Call send message to deliver message to one of brokers.
                  */

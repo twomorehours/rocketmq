@@ -1,0 +1,1 @@
+-Drocketmq.home.dir=C:\Users\zy-user\Desktop\rocketmq -Drocketmq.namesrv.addr=localhost:9876

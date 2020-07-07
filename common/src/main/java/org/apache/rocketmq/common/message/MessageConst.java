@@ -24,6 +24,7 @@ public class MessageConst {
     public static final String PROPERTY_WAIT_STORE_MSG_OK = "WAIT";
     public static final String PROPERTY_DELAY_TIME_LEVEL = "DELAY";
     public static final String PROPERTY_DELAY_TIME_IN_SECONDS = "DELAY_TIME_IN_SECONDS";
+    public static final String PROPERTY_EXECUTE_TIME_IN_SECONDS = "EXECUTE_TIME_IN_SECONDS";
     public static final String PROPERTY_RETRY_TOPIC = "RETRY_TOPIC";
     public static final String PROPERTY_REAL_TOPIC = "REAL_TOPIC";
     public static final String PROPERTY_REAL_QUEUE_ID = "REAL_QID";
