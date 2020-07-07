@@ -86,9 +86,13 @@ public class ScheduleMessageService2 {
                 e.printStackTrace();
                 return;
             }
-            mappedFile.appendMessagesInner(messageExt, this.appendMessageCallback);
         }
+        int beforePosition = mappedFile.getWrotePosition();
+        mappedFile.appendMessagesInner(messageExt, this.appendMessageCallback);
+        if (now + MINUTES_IN_MEMORY >= executeTime) {
+            // 直接进入时间轮
 
+        }
     }
 
     public boolean load() {
