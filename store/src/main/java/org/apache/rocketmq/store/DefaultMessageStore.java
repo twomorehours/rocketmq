@@ -45,6 +45,7 @@ import org.apache.rocketmq.common.SystemClock;
 import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.common.message.MessageConst;
 import org.apache.rocketmq.common.message.MessageDecoder;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageExtBatch;
@@ -61,6 +62,7 @@ import org.apache.rocketmq.store.ha.HAService;
 import org.apache.rocketmq.store.index.IndexService;
 import org.apache.rocketmq.store.index.QueryOffsetResult;
 import org.apache.rocketmq.store.schedule.ScheduleMessageService;
+import org.apache.rocketmq.store.schedule.ScheduleMessageService2;
 import org.apache.rocketmq.store.stats.BrokerStatsManager;
 
 public class DefaultMessageStore implements MessageStore {
@@ -87,6 +89,8 @@ public class DefaultMessageStore implements MessageStore {
     private final HAService haService;
 
     private final ScheduleMessageService scheduleMessageService;
+
+    private final ScheduleMessageService2 scheduleMessageService2;
 
     private final StoreStatsService storeStatsService;
 
@@ -146,6 +150,8 @@ public class DefaultMessageStore implements MessageStore {
 
         this.scheduleMessageService = new ScheduleMessageService(this);
 
+        this.scheduleMessageService2 = new ScheduleMessageService2(this);
+
         this.transientStorePool = new TransientStorePool(messageStoreConfig);
 
         if (messageStoreConfig.isTransientStorePoolEnable()) {
@@ -187,6 +193,10 @@ public class DefaultMessageStore implements MessageStore {
 
             if (null != scheduleMessageService) {
                 result = result && this.scheduleMessageService.load();
+            }
+
+            if (null != scheduleMessageService2) {
+                result = result && this.scheduleMessageService2.load();
             }
 
             // load Commit Log
@@ -308,6 +318,11 @@ public class DefaultMessageStore implements MessageStore {
             if (this.scheduleMessageService != null) {
                 this.scheduleMessageService.shutdown();
             }
+
+            if (this.scheduleMessageService2 != null) {
+                this.scheduleMessageService2.shutdown();
+            }
+
             if (this.haService != null) {
                 this.haService.shutdown();
             }
@@ -1489,6 +1504,10 @@ public class DefaultMessageStore implements MessageStore {
         return scheduleMessageService;
     }
 
+    public ScheduleMessageService2 getScheduleMessageService2() {
+        return scheduleMessageService2;
+    }
+
     public RunningFlags getRunningFlags() {
         return runningFlags;
     }
@@ -1516,6 +1535,14 @@ public class DefaultMessageStore implements MessageStore {
                 this.scheduleMessageService.shutdown();
             } else {
                 this.scheduleMessageService.start();
+            }
+        }
+
+        if (this.scheduleMessageService2 != null) {
+            if (brokerRole == BrokerRole.SLAVE) {
+                this.scheduleMessageService2.shutdown();
+            } else {
+                this.scheduleMessageService2.start();
             }
         }
 
@@ -1557,6 +1584,11 @@ public class DefaultMessageStore implements MessageStore {
 
         @Override
         public void dispatch(DispatchRequest request) {
+            boolean isDelay = request.getPropertiesMap().containsKey(MessageConst.PROPERTY_DELAY_TIME_IN_SECONDS);
+            if(isDelay){
+                DefaultMessageStore.this.getScheduleMessageService2().scheduleRequest(request);
+                return;
+            }
             final int tranType = MessageSysFlag.getTransactionValue(request.getSysFlag());
             switch (tranType) {
                 case MessageSysFlag.TRANSACTION_NOT_TYPE:

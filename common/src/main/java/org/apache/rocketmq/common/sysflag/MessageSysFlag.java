@@ -34,6 +34,8 @@ public class MessageSysFlag {
         return (flag & (~TRANSACTION_ROLLBACK_TYPE)) | type;
     }
 
+
+
     public static int clearCompressedFlag(final int flag) {
         return flag & (~COMPRESSED_FLAG);
     }

@@ -30,6 +30,7 @@ public class MessageStoreConfig {
     private String storePathCommitLog = System.getProperty("user.home") + File.separator + "store"
         + File.separator + "commitlog";
 
+
     // CommitLog file size,default is 1G
     private int mappedFileSizeCommitLog = 1024 * 1024 * 1024;
     // ConsumeQueue file size,default is 30W
@@ -282,9 +283,11 @@ public class MessageStoreConfig {
         this.checkCRCOnRecover = checkCRCOnRecover;
     }
 
+
     public String getStorePathCommitLog() {
         return storePathCommitLog;
     }
+
 
     public void setStorePathCommitLog(String storePathCommitLog) {
         this.storePathCommitLog = storePathCommitLog;

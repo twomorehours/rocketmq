@@ -1491,7 +1491,7 @@ public class CommitLog {
         }
     }
 
-    class DefaultAppendMessageCallback implements AppendMessageCallback {
+    public class DefaultAppendMessageCallback implements AppendMessageCallback {
         // File at the end of the minimum fixed length empty
         private static final int END_FILE_MIN_BLANK_LENGTH = 4 + 4;
         private final ByteBuffer msgIdMemory;
