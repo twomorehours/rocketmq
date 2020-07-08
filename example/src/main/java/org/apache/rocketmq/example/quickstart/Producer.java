@@ -50,14 +50,14 @@ public class Producer {
          */
         producer.start();
 
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 10; i++) {
             try {
 
                 /*
                  * Create a message instance, specifying topic, tag and message body.
                  */
                 Message msg = new Message("TopicTest" /* Topic */,
-                    "TagA" /* Tag */,(System.currentTimeMillis()+"").getBytes()/* Message body */
+                    "TagA" /* Tag */,(System.currentTimeMillis()/1000+"").getBytes()/* Message body */
                 );
                 msg.setDelayTime(10);
                 /*

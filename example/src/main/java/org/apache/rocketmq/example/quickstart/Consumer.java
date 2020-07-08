@@ -68,7 +68,8 @@ public class Consumer {
             public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs,
                 ConsumeConcurrentlyContext context) {
                 System.out.println(new String(msgs.get(0).getBody()));
-                System.out.println("receive at " + System.currentTimeMillis());
+                System.out.println("receive at " + System.currentTimeMillis()/1000);
+                System.out.println("========================");
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             }
         });
