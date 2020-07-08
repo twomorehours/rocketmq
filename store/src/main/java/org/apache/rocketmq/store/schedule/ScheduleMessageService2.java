@@ -80,6 +80,7 @@ public class ScheduleMessageService2 {
         String property = messageExt.getProperty(MessageConst.PROPERTY_DELAY_TIME_IN_SECONDS);
         long executeTime = Long.parseLong(property) * 1000 + now;
         messageExt.putUserProperty(MessageConst.PROPERTY_EXECUTE_TIME_IN_SECONDS, String.valueOf(executeTime / 1000));
+        MessageAccessor.clearProperty(messageExt, MessageConst.PROPERTY_DELAY_TIME_IN_SECONDS);
         long executeTimeInNumber = timeInNumber(executeTime);
         MappedFile mappedFile = logMap.get(executeTime);
         if (mappedFile == null) {
