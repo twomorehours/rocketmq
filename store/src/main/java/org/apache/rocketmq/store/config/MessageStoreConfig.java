@@ -23,24 +23,24 @@ import org.apache.rocketmq.store.ConsumeQueue;
 public class MessageStoreConfig {
     //The root directory in which the log data is kept
     @ImportantField
-//    private String storePathRootDir = System.getProperty("user.home") + File.separator + "store";
-    private String storePathRootDir = "E:\\rocketmq" + File.separator + "store";
+    private String storePathRootDir = System.getProperty("user.home") + File.separator + "store";
+//    private String storePathRootDir = "E:\\rocketmq" + File.separator + "store";
 
     //The directory in which the commitlog is kept
     @ImportantField
-//    private String storePathCommitLog = System.getProperty("user.home") + File.separator + "store"
-    private String storePathCommitLog = "E:\\rocketmq" + File.separator + "store"
+    private String storePathCommitLog = System.getProperty("user.home") + File.separator + "store"
+//    private String storePathCommitLog = "E:\\rocketmq" + File.separator + "store"
         + File.separator + "commitlog";
 
 
     // CommitLog file size,default is 1G
-    private int mappedFileSizeCommitLog = 1024 * 1024 ;
+    private int mappedFileSizeCommitLog = 1024 * 1024 * 1024;
     // ConsumeQueue file size,default is 30W
     private int mappedFileSizeConsumeQueue = 300000 * ConsumeQueue.CQ_STORE_UNIT_SIZE;
     // enable consume queue ext
     private boolean enableConsumeQueueExt = false;
     // ConsumeQueue extend file size, 48M
-    private int mappedFileSizeConsumeQueueExt = 48 * 1024;
+    private int mappedFileSizeConsumeQueueExt = 48 * 1024 * 1024;
     // Bit count of filter bit map.
     // this will be set by pipe of calculate filter bit map.
     private int bitMapLengthConsumeQueueExt = 64;

@@ -50,7 +50,7 @@ public class Producer {
          */
         producer.start();
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 5; i++) {
             try {
 
                 /*
@@ -59,7 +59,7 @@ public class Producer {
                 Message msg = new Message("TopicTest" /* Topic */,
                     "TagA" /* Tag */,(System.currentTimeMillis()/1000+"").getBytes()/* Message body */
                 );
-                msg.setDelayTime(10);
+                msg.setDelayTime(5);
                 /*
                  * Call send message to deliver message to one of brokers.
                  */

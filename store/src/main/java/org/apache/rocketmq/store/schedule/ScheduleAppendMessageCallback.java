@@ -119,7 +119,6 @@ class ScheduleAppendMessageCallback implements AppendMessageCallback {
             byteBuffer.put(this.msgStoreItemMemory.array(), 0, msgLen);
             AppendMessageResult result = new AppendMessageResult(AppendMessageStatus.PUT_OK, wroteOffset, msgLen, msgId,
                     msgInner.getStoreTimestamp(), 0, System.currentTimeMillis() - beginTimeMills);
-            
             return result;
         }
 

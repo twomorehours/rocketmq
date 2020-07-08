@@ -1,1 +1,2 @@
--Drocketmq.home.dir=C:\Users\zy-user\Desktop\rocketmq -Drocketmq.namesrv.addr=localhost:9876
+-Drocketmq.home.dir=/Users/yss/Desktop/develop/java/learn/rocketmq/env
+-Drocketmq.namesrv.addr=localhost:9876

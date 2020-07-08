@@ -41,7 +41,11 @@ public class TimeWheel {
 
     public void addTask(long executeTimeInSeconds, Runnable runnable) {
         long now = System.currentTimeMillis() / 1000;
-        if (executeTimeInSeconds <= now || executeTimeInSeconds > now + timeSpanInSeconds) {
+        if (executeTimeInSeconds <= now) {
+            scheduledExecutorService.execute(runnable);
+            return;
+        }
+        if (executeTimeInSeconds > now + timeSpanInSeconds) {
             throw new IllegalArgumentException("wrong executeTime");
         }
         int newIndex = (((int) (executeTimeInSeconds - now)) + currIndex) % buckets.length;
@@ -72,7 +76,8 @@ public class TimeWheel {
                 // 第一次调度在0s 第二次在1s ...
                 // 这样来补偿因为线程延迟带来的误差
                 long timeWait = scheduleCount - (System.currentTimeMillis() / 1000 - startTime);
-                scheduledExecutorService.schedule(this, timeWait <= 0 ? 0 : timeWait, TimeUnit.SECONDS);
+                scheduledExecutorService.schedule(this, timeWait <= 0 ? 0 : timeWait,
+                        TimeUnit.SECONDS);
             }
         }, 0, TimeUnit.SECONDS);
     }
@@ -81,6 +86,10 @@ public class TimeWheel {
         if (started.compareAndSet(true, false)) {
             scheduledExecutorService.shutdown();
         }
+    }
+
+    public long getCurrentScheduleTime() {
+        return startTime + scheduleCount;
     }
 
 }
